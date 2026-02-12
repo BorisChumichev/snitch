@@ -1,5 +1,5 @@
 import delay from 'delay'
-import { nth } from 'ramda'
+
 import createSnitch from '.'
 import '../common/testutil/setup-crypto'
 import engagementPlugin from '../snitch-plugin-engagement'
@@ -11,7 +11,7 @@ import { SESSION_EXPIRING_INACTIVITY_TIME_MSEC } from '../snitch-plugin-session/
 import * as storage from '../snitch-plugin-session/storage'
 import {
   postedTopmailruEventsLog,
-  topmailruCounterMock
+  topmailruCounterMock,
 } from '../snitch-plugin-topmailru-transport/topmailru-counter-mock'
 import topmailruTransportPlugin from '../snitch-plugin-topmailru-transport/topmailru-transport'
 const TEST_COUNTER_ID = '3221421'
@@ -24,7 +24,7 @@ const createPlugins = () => [
   sessionPlugin(),
   screenPlugin({ screenType: 'onboarding', screenId: 'step1' }),
   launchPlugin(),
-  topmailruTransportPlugin(TEST_COUNTER_ID)
+  topmailruTransportPlugin(TEST_COUNTER_ID),
 ]
 
 describe('Tracker', () => {
@@ -43,7 +43,7 @@ describe('Tracker', () => {
     expect(sessionCount).toEqual(1)
     expect(sessionUTMParams).toEqual('')
     // posts TMR event
-    const sessionStartEvent = nth(-2, postedTopmailruEventsLog)
+    const sessionStartEvent = postedTopmailruEventsLog.at(-2)
     expect(sessionStartEvent.id).toEqual(TEST_COUNTER_ID)
     expect(sessionStartEvent.type).toEqual('reachGoal')
     expect(sessionStartEvent.goal).toEqual('sessionStart')
@@ -52,7 +52,7 @@ describe('Tracker', () => {
       href: window.location.href,
       sid: sessionId,
       scnt: sessionCount,
-      sutm: ''
+      sutm: '',
     })
     expect(sessionStartEvent.params.set >= 0).toBeTruthy()
   })
@@ -65,7 +65,7 @@ describe('Tracker', () => {
     expect(storage.getSessionId()).toEqual(sessionId)
     expect(storage.getSessionCount()).toEqual(1)
     // 'launch' event is sent
-    const openEvent = nth(-1, postedTopmailruEventsLog)
+    const openEvent = postedTopmailruEventsLog.at(-1)
     expect(openEvent.goal).toEqual('launch')
     expect(openEvent.params.sid).toEqual(sessionId)
   })
@@ -80,8 +80,8 @@ describe('Tracker', () => {
     expect(storage.getSessionCount()).toEqual(2)
     expect(storage.getSessionUTMParams()).toEqual('vk,promopost')
     // sends utm params with TMR events
-    const sessionStartEvent = nth(-2, postedTopmailruEventsLog)
-    const openEvent = nth(-1, postedTopmailruEventsLog)
+    const sessionStartEvent = postedTopmailruEventsLog.at(-2)
+    const openEvent = postedTopmailruEventsLog.at(-1)
     expect(sessionStartEvent.params.sid !== oldSessionId).toBeTruthy()
     expect(sessionStartEvent.params.sutm).toEqual('vk,promopost')
     // sends utm params with following events
@@ -100,7 +100,7 @@ describe('Tracker', () => {
     expect(storage.getSessionCount()).toEqual(3)
     expect(storage.getLastInteractiveEventTS() > 0).toBeTruthy()
     // sends sessionStart TMR event
-    const sessionStartEvent = nth(-2, postedTopmailruEventsLog)
+    const sessionStartEvent = postedTopmailruEventsLog.at(-2)
     expect(sessionStartEvent.params.sid).toEqual(newSessionId)
     expect(sessionStartEvent.params.scnt).toEqual(3)
   })
@@ -108,7 +108,7 @@ describe('Tracker', () => {
   it('it tracks custom events', () => {
     const testEventName = 'testEvent'
     snitch(testEventName)
-    const testEvent = nth(-1, postedTopmailruEventsLog)
+    const testEvent = postedTopmailruEventsLog.at(-1)
     expect(testEvent.goal).toEqual(testEventName)
   })
 
@@ -116,7 +116,7 @@ describe('Tracker', () => {
     const testEventName = 'testEvent'
     const testEventPayload = { param1: '1', param2: 2 }
     snitch(testEventName, testEventPayload)
-    const testEvent = nth(-1, postedTopmailruEventsLog)
+    const testEvent = postedTopmailruEventsLog.at(-1)
     expect(testEvent.goal).toEqual(testEventName)
     expect(testEvent.params).toMatchObject(testEventPayload)
   })
@@ -134,23 +134,23 @@ describe('Tracker', () => {
     const oldSessionId = storage.getSessionId()
     snitch('testEvent')
     expect(storage.getSessionId() !== oldSessionId).toBeTruthy()
-    expect(nth(-2, postedTopmailruEventsLog).goal).toEqual('sessionStart')
-    expect(nth(-1, postedTopmailruEventsLog).params.sid !== oldSessionId).toBeTruthy()
+    expect(postedTopmailruEventsLog.at(-2).goal).toEqual('sessionStart')
+    expect(postedTopmailruEventsLog.at(-1).params.sid !== oldSessionId).toBeTruthy()
   })
 
   it('it tracks screen views', async () => {
     snitch = createSnitch(...createPlugins())
     await delay(0)
-    const sessionStartEvent = nth(-2, postedTopmailruEventsLog)
+    const sessionStartEvent = postedTopmailruEventsLog.at(-2)
     expect(sessionStartEvent.goal).toEqual('sessionStart')
     expect(sessionStartEvent.params.sct).toEqual('onboarding')
     expect(sessionStartEvent.params.scid).toEqual('step1')
-    const openEvent = nth(-1, postedTopmailruEventsLog)
+    const openEvent = postedTopmailruEventsLog.at(-1)
     expect(openEvent.goal).toEqual('launch')
     expect(openEvent.params.sct).toEqual('onboarding')
     expect(openEvent.params.scid).toEqual('step1')
     snitch('screenChange', { screenType: 'catalogue' })
-    const screenChangeEvent = nth(-1, postedTopmailruEventsLog)
+    const screenChangeEvent = postedTopmailruEventsLog.at(-1)
     expect(screenChangeEvent.goal).toEqual('screenChange')
     expect(screenChangeEvent.params.sct).toEqual('catalogue')
     expect(screenChangeEvent.params.scid).toEqual('')
@@ -162,7 +162,7 @@ describe('Tracker', () => {
     const oldLocation = window.location.href
     window.history.pushState({}, '', '/login')
     await delay(1)
-    const locationChangeEvent = nth(-1, postedTopmailruEventsLog)
+    const locationChangeEvent = postedTopmailruEventsLog.at(-1)
     expect(locationChangeEvent.goal).toEqual('locationChange')
     expect(locationChangeEvent.params.href).toEqual(window.location.href)
     expect(locationChangeEvent.params.phref).toEqual(oldLocation)
@@ -178,7 +178,7 @@ describe('Tracker', () => {
   it('it sends engagement events periodically', async () => {
     snitch = createSnitch(...createPlugins())
     await delay(250)
-    expect(nth(-1, postedTopmailruEventsLog).goal).toEqual('engage')
-    expect(nth(-2, postedTopmailruEventsLog).goal).toEqual('engage')
+    expect(postedTopmailruEventsLog.at(-1).goal).toEqual('engage')
+    expect(postedTopmailruEventsLog.at(-2).goal).toEqual('engage')
   })
 })

@@ -31,6 +31,8 @@ export { default as webVitalsPlugin } from './packages/snitch-plugin-web-vitals/
 export { default as flagPlugin } from './packages/snitch-plugin-flag/index'
 export { default as debugLoggerPlugin } from './packages/snitch-plugin-debug-logger/index'
 export { default as useragentPlugin } from './packages/snitch-plugin-useragent/index'
+export { default as devicePlugin } from './packages/snitch-plugin-device/index'
+export { default as userPlugin } from './packages/snitch-plugin-user/index'
 
 // Transports
 export { default as beaconTransportPlugin } from './packages/snitch-plugin-beacon-transport/index'

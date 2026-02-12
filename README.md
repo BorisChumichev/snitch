@@ -13,6 +13,8 @@ npm install @borisch/snitch
 ```ts
 import {
   snitch,
+  devicePlugin,
+  userPlugin,
   sessionPlugin,
   launchPlugin,
   scrollPlugin,
@@ -22,6 +24,8 @@ import {
 } from '@borisch/snitch'
 
 const captureEvent = snitch(
+  devicePlugin(),
+  userPlugin(),
   sessionPlugin(),
   launchPlugin(),
   scrollPlugin(),
@@ -203,6 +207,97 @@ Attaches to every event:
 | Param | Description |
 |-------|-------------|
 | `ua` | `navigator.userAgent` |
+
+---
+
+### `devicePlugin()`
+
+Generates a persistent device (browser) identifier stored in `localStorage` under the key `snitch:did`. The ID is created once and reused forever across all sessions — it survives page reloads, tab closes, and new sessions. It only resets if the user clears their browser storage.
+
+If `localStorage` is unavailable, a new ID is generated per `snitch()` call (in-memory only).
+
+Attaches to every event:
+| Param | Description |
+|-------|-------------|
+| `did` | Persistent device ID |
+
+---
+
+### `userPlugin(userId?)`
+
+Tracks the current user. Exposes `.setUserId(id)` and `.clearUserId()` methods on the `captureEvent` function via mixins. The user ID is stored in-memory only — no `localStorage`, no emitted events. This makes it safe to use in both browser and server-side environments.
+
+When no user ID is set, `uid` is omitted from events entirely.
+
+If the user ID is known at initialization time, it can be passed directly:
+
+```ts
+const captureEvent = snitch(
+  userPlugin('user-123'),
+  // ...
+) as any
+```
+
+Otherwise, set it later:
+
+```ts
+captureEvent.setUserId('user-123')
+```
+
+**Methods (mixins):**
+| Method | Description |
+|--------|-------------|
+| `setUserId(id: string)` | Set the user ID. All subsequent events will include `uid`. |
+| `clearUserId()` | Clear the user ID. `uid` is no longer attached to events. |
+| `withUserId(id: string, eventName: string, eventPayload?)` | Temporarily set the user ID, send a single event, then restore the previous user ID. Designed for server-side use where a single snitch instance handles multiple users. |
+
+Attaches to every event (while user ID is set):
+| Param | Description |
+|-------|-------------|
+| `uid` | Current user ID |
+
+**Usage:**
+
+```ts
+const captureEvent = snitch(
+  devicePlugin(),
+  userPlugin(),
+  sessionPlugin(),
+  beaconTransportPlugin({ hostname: '...' }),
+) as any
+
+// User logs in
+captureEvent.setUserId('user-123')
+
+captureEvent('add_to_cart', { productId: 'abc' })
+// => { event: 'add_to_cart', productId: 'abc', uid: 'user-123', did: '...', sid: '...' }
+
+// User logs out
+captureEvent.clearUserId()
+// uid is no longer attached to events
+
+// Server-side (s2s-transport) — pass uid at init, no localStorage needed
+const track = snitch(
+  userPlugin(req.userId),
+  s2sTransportPlugin({ hostname: 'analytics.example.com' }),
+)
+track('subscriptionRenewalPaymentFailed')
+// => { event: 'subscriptionRenewalPaymentFailed', uid: 'user-123' }
+```
+
+**Server-side with `.withUserId()`:**
+
+When a single snitch instance handles requests from multiple users (e.g., in an Express handler), use `.withUserId()` to atomically send an event with a specific user ID without affecting other requests. The captureEvent pipeline is synchronous, so the temporary uid swap is safe — no interleaving is possible.
+
+```ts
+const track = snitch(userPlugin(), s2sTransportPlugin({ hostname: 'analytics.example.com' })) as any
+
+app.post('/api/checkout', (req, res) => {
+  // Sends this one event with uid='user-42', then restores previous state
+  track.withUserId(req.userId, 'checkout_completed', { orderId: req.body.orderId })
+  res.json({ ok: true })
+})
+```
 
 ---
 

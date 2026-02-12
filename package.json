@@ -1,0 +1,71 @@
+{
+  "name": "@borisch/snitch",
+  "version": "1.0.0",
+  "description": "Modular analytics tracking library with pluggable transports",
+  "keywords": [
+    "analytics",
+    "tracking",
+    "plugins",
+    "beacon",
+    "web-vitals"
+  ],
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "author": "Boris Chumichev <borisboha@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BorisChumichev/snitch.git"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --coverage --watch"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.[tj]s$": "ts-jest"
+    },
+    "testEnvironment": "jsdom",
+    "testMatch": [
+      "**/*.test.ts"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "collectCoverageFrom": [
+      "packages/**/*.ts"
+    ]
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true
+  },
+  "devDependencies": {
+    "@types/jest": "^23.3.2",
+    "@types/node": "^10.17.60",
+    "delay": "^5.0.0",
+    "jest": "^27.0.6",
+    "jsdom": "^16.6.0",
+    "prettier": "^1.14.3",
+    "rimraf": "^2.6.2",
+    "ts-jest": "^27.0.3",
+    "ts-node": "^7.0.1",
+    "tslib": "^2.3.0",
+    "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "web-vitals": "^3.0.4"
+  }
+}

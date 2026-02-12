@@ -1,6 +1,6 @@
 {
   "name": "@borisch/snitch",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Modular analytics tracking library with pluggable transports",
   "keywords": [
     "analytics",
@@ -9,16 +9,19 @@
     "beacon",
     "web-vitals"
   ],
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "typings": "dist/cjs/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./dist/cjs/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
     },
     "./server": {
-      "types": "./dist/server.d.ts",
-      "default": "./dist/server.js"
+      "types": "./dist/cjs/server.d.ts",
+      "import": "./dist/esm/server.js",
+      "require": "./dist/cjs/server.js"
     }
   },
   "files": [
@@ -35,7 +38,7 @@
   },
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "tsc",
+    "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json",
     "test": "jest",
     "test:watch": "jest --coverage --watch"
   },

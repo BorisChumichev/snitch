@@ -8,7 +8,7 @@ Modular analytics tracking library. Compose your tracker from small, focused plu
 npm install @borisch/snitch
 ```
 
-## Quick Start
+## Quick Start (Browser)
 
 ```ts
 import {
@@ -36,6 +36,47 @@ const captureEvent = snitch(
 
 // Manually capture events
 captureEvent('button_click', { buttonId: 'signup' })
+```
+
+## Server-Side Usage
+
+Many plugins use browser APIs (`window`, `document`, `localStorage`). Importing `@borisch/snitch` on the server will fail because some plugins reference `window` at the module level.
+
+Use the server entry point instead:
+
+```ts
+import {
+  snitch,
+  userPlugin,
+  devicePlugin,
+  screenPlugin,
+  debugLoggerPlugin,
+  s2sTransportPlugin,
+} from '@borisch/snitch/server'
+```
+
+The server entry point exports only the plugins and transports that work without browser APIs:
+
+| Export               | Description                                                |
+| -------------------- | ---------------------------------------------------------- |
+| `snitch`             | Core factory function                                      |
+| `userPlugin`         | In-memory user ID tracking                                 |
+| `devicePlugin`       | Device ID (falls back to random ID without `localStorage`) |
+| `screenPlugin`       | Screen tracking (pure state management)                    |
+| `debugLoggerPlugin`  | Console logger (silently disabled without `localStorage`)  |
+| `s2sTransportPlugin` | HTTP transport via `fetch()` (available in Node 18+)       |
+
+All types are also re-exported from `@borisch/snitch/server`.
+
+**Example — server-side event tracking:**
+
+```ts
+import { snitch, userPlugin, s2sTransportPlugin } from '@borisch/snitch/server'
+
+const track = snitch(userPlugin(), s2sTransportPlugin({ hostname: 'analytics.example.com' })) as any
+
+// One-shot event with a specific user ID
+track.withUserId(req.userId, 'checkout_completed', { orderId: '12345' })
 ```
 
 The `snitch()` function accepts any number of plugins and returns a `captureEvent` function. Plugins can:

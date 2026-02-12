@@ -1,8 +1,17 @@
 import { BeforeCaptureEventHandler, InitializationHandler } from '../common/plugin-interfaces'
 import { TrackerEventPayload } from '../common/tracker-interfaces'
-export default function engagementPlugin(): InitializationHandler & BeforeCaptureEventHandler {
+
+const STORAGE_KEY = 'snitch:debug'
+
+export default function debugLoggerPlugin(): InitializationHandler & BeforeCaptureEventHandler {
+  let enabled = false
+  try {
+    enabled = localStorage.getItem(STORAGE_KEY) === 'true'
+  } catch {}
+
   let lastLogTS: number | null = null
   function logLine(message: string) {
+    if (!enabled) return
     const now = new Date()
     console.log(
       `%c[${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}]${
@@ -10,7 +19,7 @@ export default function engagementPlugin(): InitializationHandler & BeforeCaptur
       } %cSnitch: %c${message}`,
       'color: gray',
       'color: black',
-      'font-weight: bold'
+      'font-weight: bold',
     )
     lastLogTS = now.getTime()
   }
@@ -21,7 +30,8 @@ export default function engagementPlugin(): InitializationHandler & BeforeCaptur
 
     beforeCaptureEvent(eventName: string, eventPayload: TrackerEventPayload) {
       logLine(`captured event '${eventName}'`)
-      if (eventPayload && Object.keys(eventPayload).length !== 0) console.table(eventPayload)
-    }
+      if (enabled && eventPayload && Object.keys(eventPayload).length !== 0)
+        console.table(eventPayload)
+    },
   }
 }

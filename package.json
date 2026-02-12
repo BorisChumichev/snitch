@@ -1,6 +1,6 @@
 {
   "name": "@borisch/snitch",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Modular analytics tracking library with pluggable transports",
   "keywords": [
     "analytics",
